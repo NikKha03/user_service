@@ -1,9 +1,13 @@
 package NikKha03.UserService.controllers;
 
-import NikKha03.UserService.DTO.UserDto;
+import NikKha03.UserService.DTO.UserKeycloakAdminDto;
 import NikKha03.UserService.service.KeycloakUserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -19,14 +23,21 @@ public class UserController {
         this.keycloakUserService = keycloakUserService;
     }
 
+    @GetMapping("/authorized")
+    public Object getUser(@AuthenticationPrincipal OidcUser oidcUser) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("username: " + authentication.getName());
+        return oidcUser;
+    }
+
     @GetMapping
-    public ResponseEntity<List<UserDto>> getAllUsers() {
+    public ResponseEntity<List<UserKeycloakAdminDto>> getAllUsers() {
         return ResponseEntity.ok(keycloakUserService.getAllUsers());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserDto> getUserById(@PathVariable String id) {
-        UserDto user = keycloakUserService.getUserById(id);
+    public ResponseEntity<UserKeycloakAdminDto> getUserById(@PathVariable String id) {
+        UserKeycloakAdminDto user = keycloakUserService.getUserById(id);
         if (user == null) {
             return ResponseEntity.notFound().build();
         }
@@ -34,8 +45,8 @@ public class UserController {
     }
 
     @GetMapping("/username/{username}")
-    public ResponseEntity<UserDto> getUserByUsername(@PathVariable String username) {
-        UserDto user = keycloakUserService.getUserByUsername(username);
+    public ResponseEntity<UserKeycloakAdminDto> getUserByUsername(@PathVariable String username) {
+        UserKeycloakAdminDto user = keycloakUserService.getUserByUsername(username);
         if (user == null) {
             return ResponseEntity.notFound().build();
         }
@@ -43,13 +54,13 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> createUser(@RequestBody UserDto userDto) {
+    public ResponseEntity<Void> createUser(@RequestBody UserKeycloakAdminDto userDto) {
         String userId = keycloakUserService.createUser(userDto);
         return ResponseEntity.created(URI.create("/user_service/" + userId)).build();
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> updateUser(@PathVariable String id,@RequestBody UserDto userDto) {
+    public ResponseEntity<Void> updateUser(@PathVariable String id, @RequestBody UserKeycloakAdminDto userDto) {
         try {
             keycloakUserService.updateUser(id, userDto);
             return ResponseEntity.noContent().build();

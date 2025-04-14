@@ -1,6 +1,6 @@
 package NikKha03.UserService.service;
 
-import NikKha03.UserService.DTO.UserDto;
+import NikKha03.UserService.DTO.UserKeycloakAdminDto;
 import jakarta.ws.rs.core.Response;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RealmResource;
@@ -26,18 +26,18 @@ public class KeycloakUserService {
     @Value("${keycloak.admin.target-realm}")
     private String realm;
 
-    public List<UserDto> getAllUsers() {
+    public List<UserKeycloakAdminDto> getAllUsers() {
         return keycloak.realm(realm).users().list().stream()
                 .map(this::mapToUserDto)
                 .collect(Collectors.toList());
     }
 
-    public UserDto getUserById(String id) {
+    public UserKeycloakAdminDto getUserById(String id) {
         UserRepresentation user = keycloak.realm(realm).users().get(id).toRepresentation();
         return mapToUserDto(user);
     }
 
-    public UserDto getUserByUsername(String username) {
+    public UserKeycloakAdminDto getUserByUsername(String username) {
         List<UserRepresentation> users = keycloak.realm(realm).users().search(username, true);
         if (users.isEmpty()) {
             return null;
@@ -45,7 +45,7 @@ public class KeycloakUserService {
         return mapToUserDto(users.get(0));
     }
 
-    public String createUser(UserDto userDto) {
+    public String createUser(UserKeycloakAdminDto userDto) {
         UserRepresentation user = mapToUserRepresentation(userDto);
 
         try (Response response = keycloak.realm(realm).users().create(user)) {
@@ -67,7 +67,7 @@ public class KeycloakUserService {
         }
     }
 
-    public void updateUser(String userId, UserDto userDto) {
+    public void updateUser(String userId, UserKeycloakAdminDto userDto) {
         UserResource userResource = keycloak.realm(realm).users().get(userId);
         UserRepresentation user = mapToUserRepresentation(userDto);
         user.setId(userId);
@@ -137,12 +137,12 @@ public class KeycloakUserService {
         }
     }
 
-    private UserDto mapToUserDto(UserRepresentation user) {
+    private UserKeycloakAdminDto mapToUserDto(UserRepresentation user) {
         if (user == null) {
             return null;
         }
 
-        UserDto userDto = new UserDto();
+        UserKeycloakAdminDto userDto = new UserKeycloakAdminDto();
         userDto.setId(user.getId());
         userDto.setUsername(user.getUsername());
         userDto.setEmail(user.getEmail());
@@ -164,7 +164,7 @@ public class KeycloakUserService {
         return userDto;
     }
 
-    private UserRepresentation mapToUserRepresentation(UserDto userDto) {
+    private UserRepresentation mapToUserRepresentation(UserKeycloakAdminDto userDto) {
         UserRepresentation user = new UserRepresentation();
         user.setUsername(userDto.getUsername());
         user.setEmail(userDto.getEmail());

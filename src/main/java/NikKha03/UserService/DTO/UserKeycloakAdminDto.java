@@ -8,7 +8,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDto {
+public class UserKeycloakAdminDto {
 
     private String id;
 
