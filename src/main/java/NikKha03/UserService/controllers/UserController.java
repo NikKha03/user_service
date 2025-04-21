@@ -11,7 +11,9 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/user_service/")
@@ -51,6 +53,22 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(user);
+    }
+
+    @PostMapping("/users")
+    public ResponseEntity<Object> getUsersByUsername(@RequestBody List<String> usernames) {
+        System.out.println("usernames: " + usernames);
+        if (usernames == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Map<String, String> result = new HashMap<>();
+        for (String username : usernames) {
+            UserKeycloakAdminDto user = keycloakUserService.getUserByUsername(username);
+            result.put(username, user.getFirstName() + " " + user.getLastName());
+        }
+
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping

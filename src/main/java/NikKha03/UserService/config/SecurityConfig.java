@@ -17,9 +17,6 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.HashMap;
 import java.util.List;
@@ -89,12 +86,17 @@ public class SecurityConfig {
                                             .map(GrantedAuthority.class::cast))
                             .toList();
 
-            if (!taskServiceClient.isDataHave(oidcUser.getPreferredUsername())) {
-                Map<String, String> result = new HashMap<>();
-                result.put("username", oidcUser.getPreferredUsername());
-                result.put("userId", oidcUser.getUserInfo().getSubject());
-                taskServiceClient.pushUserInTaskService(result);
+            try {
+                if (!taskServiceClient.isDataHave(oidcUser.getPreferredUsername())) {
+                    Map<String, String> result = new HashMap<>();
+                    result.put("username", oidcUser.getPreferredUsername());
+                    result.put("userId", oidcUser.getUserInfo().getSubject());
+                    taskServiceClient.pushUserInTaskService(result);
+                }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
             }
+
 
             return new DefaultOidcUser(authorities, oidcUser.getIdToken(), "upn");
         };
