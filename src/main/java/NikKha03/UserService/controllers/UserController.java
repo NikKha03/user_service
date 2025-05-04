@@ -2,6 +2,7 @@ package NikKha03.UserService.controllers;
 
 import NikKha03.UserService.DTO.UserKeycloakAdminDto;
 import NikKha03.UserService.service.KeycloakUserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@Tag(name = "user_controller")
 @RequestMapping("/user_service/")
 public class UserController {
 
