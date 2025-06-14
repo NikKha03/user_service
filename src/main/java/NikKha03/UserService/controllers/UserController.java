@@ -48,7 +48,7 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    @GetMapping("/username/{username}")
+    @GetMapping("/user/{username}")
     public ResponseEntity<UserKeycloakAdminDto> getUserByUsername(@PathVariable String username) {
         UserKeycloakAdminDto user = keycloakUserService.getUserByUsername(username);
         if (user == null) {
