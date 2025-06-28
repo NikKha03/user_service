@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,11 +26,25 @@ public class UserController {
         this.keycloakUserService = keycloakUserService;
     }
 
+    @GetMapping("/signin")
+    public ResponseEntity<Object> signin(@RequestParam String username, @RequestParam String password) {
+        return ResponseEntity.ok(keycloakUserService.signIn(username, password));
+    }
+
+    @GetMapping("/authorized-jwt")
+    public Object getUser(Authentication authentication) {
+        return authentication.getPrincipal();
+    }
+
     @GetMapping("/authorized")
     public Object getUser(@AuthenticationPrincipal OidcUser oidcUser) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println("username: " + authentication.getName());
         return oidcUser;
+    }
+
+    @PostMapping("/logout/{userId}")
+    public ResponseEntity<?> logout(@PathVariable String userId) {
+        // userId это sub
+        return ResponseEntity.ok(keycloakUserService.logout(userId));
     }
 
     @GetMapping
@@ -59,7 +72,6 @@ public class UserController {
 
     @PostMapping("/users")
     public ResponseEntity<Object> getUsersByUsername(@RequestBody List<String> usernames) {
-        System.out.println("usernames: " + usernames);
         if (usernames == null) {
             return ResponseEntity.notFound().build();
         }
@@ -98,5 +110,4 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
 }

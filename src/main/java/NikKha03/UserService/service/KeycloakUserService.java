@@ -9,7 +9,14 @@ import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +32,51 @@ public class KeycloakUserService {
 
     @Value("${keycloak.admin.target-realm}")
     private String realm;
+
+    @Value("#{'${spring.security.oauth2.client.registration.keycloak.client-id}'}")
+    private String clientId;
+
+    @Value("#{'${spring.security.oauth2.client.registration.keycloak.client-secret}'}")
+    private String clientSecret;
+
+    private RestTemplate restTemplate = new RestTemplate();
+
+    public Object signIn(String username, String password) {
+        // Создаем headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        // Создаем form data
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("grant_type", "password");
+        formData.add("client_id", clientId);
+        formData.add("client_secret", clientSecret);
+        formData.add("username", username);
+        formData.add("password", password);
+
+        // Создаем HttpEntity
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(formData, headers);
+
+        try {
+            return restTemplate.exchange(
+                    "https://keycloak.sharpbubbles.online/realms/NikKha03/protocol/openid-connect/token",
+                    HttpMethod.POST,
+                    requestEntity,
+                    String.class
+            ).getBody();
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+    }
+
+    public String logout(String userId) {
+        try {
+            keycloak.realm(realm).users().get(userId).logout();
+            return "Сеансы пользователя завершены";
+        } catch (Exception e) {
+            return "Что-то пошло не так :(";
+        }
+    }
 
     public List<UserKeycloakAdminDto> getAllUsers() {
         return keycloak.realm(realm).users().list().stream()
