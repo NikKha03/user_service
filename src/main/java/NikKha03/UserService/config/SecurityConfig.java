@@ -20,6 +20,8 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 
 import java.util.HashMap;
 import java.util.List;
@@ -38,27 +40,11 @@ public class SecurityConfig {
         this.taskServiceClient = taskServiceClient;
     }
 
-    /*
-    @Value("#{'${dop-urls.allowed-origins}'.split(', ')}")
-    private List<String> allowedOrigins;
-
-    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5175", "https://tracker.sharpbubbles.ru", "https://api.sharpbubbles.ru"));
-        configuration.addAllowedHeader("*");
-        configuration.addAllowedMethod("*");
-        configuration.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
-        urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", configuration);
-
-        return urlBasedCorsConfigurationSource;
-    }
-    */
-
     @Value("#{'${spring.security.oauth2.client.provider.keycloak.user-name-attribute}'}")
     private String attribute;
+
+    @Value("#{'${app-env.front-page}'}")
+    private String frontPage;
 
     @Bean()
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -71,8 +57,12 @@ public class SecurityConfig {
                 .oauth2ResourceServer(resource -> resource
                         .jwt(Customizer.withDefaults())
                 )
-                .oauth2Login(Customizer.withDefaults())
-        ;
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .oidcUserService(oAuth2UserService())
+                        )
+                        .successHandler(authenticationSuccessHandler())
+                );
 
         return http.build();
     }
@@ -96,6 +86,14 @@ public class SecurityConfig {
                     .toList();
         });
         return jwtAuthenticationConverter;
+    }
+
+    @Bean
+    public AuthenticationSuccessHandler authenticationSuccessHandler() {
+        SimpleUrlAuthenticationSuccessHandler successHandler =
+                new SimpleUrlAuthenticationSuccessHandler();
+        successHandler.setDefaultTargetUrl(frontPage); // URL для redirect
+        return successHandler;
     }
 
     @Bean
