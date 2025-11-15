@@ -59,7 +59,7 @@ public class KeycloakUserService {
 
         try {
             return restTemplate.exchange(
-                    "https://keycloak.sharpbubbles.online/realms/NikKha03/protocol/openid-connect/token",
+                    "https://keycloak.khalimendik.ru/realms/NikKha03/protocol/openid-connect/token",
                     HttpMethod.POST,
                     requestEntity,
                     String.class
