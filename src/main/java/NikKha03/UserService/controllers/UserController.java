@@ -3,10 +3,14 @@ package NikKha03.UserService.controllers;
 import NikKha03.UserService.DTO.UserKeycloakAdminDto;
 import NikKha03.UserService.service.KeycloakUserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +23,11 @@ import java.util.Map;
 @Tag(name = "user_controller")
 @RequestMapping("/user_service/")
 public class UserController {
+
+    // Spring автоматически сохраняет: access token и refresh token
+    // в OAuth2AuthorizedClientService после успешной OAuth2/OIDC авторизации (то есть когда сработал oauth2Login)
+    @Autowired
+    private OAuth2AuthorizedClientService clientService;
 
     private final KeycloakUserService keycloakUserService;
 
@@ -38,7 +47,22 @@ public class UserController {
 
     @GetMapping("/authorized")
     public Object getUser(@AuthenticationPrincipal OidcUser oidcUser) {
+        // @TODO Это access токен, его надо сохранить в память frontend-a и с ним делать запросы на api
+        // если токен недействителен, то делаем запрос на refresh
+        System.out.println(oidcUser.getIdToken().getTokenValue());
         return oidcUser;
+    }
+
+    @GetMapping("/refresh")
+    public Object getRefreshToken(Authentication auth) {
+        OAuth2AuthorizedClient client = clientService.loadAuthorizedClient("keycloak", auth.getName());
+
+        if (client != null && client.getRefreshToken() != null) {
+            // @TODO Надо не refresh возвращать, а делать запрос на обновление access и его возвращать
+            return client.getRefreshToken().getTokenValue();
+        }
+
+        return "no refresh token";
     }
 
     @PostMapping("/logout/{userId}")
