@@ -24,6 +24,8 @@ import java.util.Map;
 @RequestMapping("/user_service/")
 public class UserController {
 
+
+
     // Spring автоматически сохраняет: access token и refresh token
     // в OAuth2AuthorizedClientService после успешной OAuth2/OIDC авторизации (то есть когда сработал oauth2Login)
     @Autowired
@@ -35,16 +37,25 @@ public class UserController {
         this.keycloakUserService = keycloakUserService;
     }
 
+    /** Получить access token и refresh token по логину и паролю */
     @GetMapping("/signin")
     public ResponseEntity<Object> signin(@RequestParam String username, @RequestParam String password) {
         return ResponseEntity.ok(keycloakUserService.signIn(username, password));
     }
 
+    /** Получить access token и refresh token по refresh token'у */
+    @GetMapping("/refresh")
+    public Object getRefreshToken(@RequestParam String refreshToken) {
+        return ResponseEntity.ok(keycloakUserService.refresh(refreshToken));
+    }
+
+    /** Получить пользователя по access token'у */
     @GetMapping("/authorized-jwt")
     public Object getUser(Authentication authentication) {
         return authentication.getPrincipal();
     }
 
+    /** Авторизация по сессии */
     @GetMapping("/authorized")
     public Object getUser(@AuthenticationPrincipal OidcUser oidcUser) {
         // @TODO Это access токен, его надо сохранить в память frontend-a и с ним делать запросы на api
@@ -53,16 +64,13 @@ public class UserController {
         return oidcUser;
     }
 
-    @GetMapping("/refresh")
-    public Object getRefreshToken(Authentication auth) {
-        OAuth2AuthorizedClient client = clientService.loadAuthorizedClient("keycloak", auth.getName());
-
-        if (client != null && client.getRefreshToken() != null) {
-            // @TODO Надо не refresh возвращать, а делать запрос на обновление access и его возвращать
-            return client.getRefreshToken().getTokenValue();
-        }
-
-        return "no refresh token";
+    @GetMapping("/access")
+    public Object getAccess(@AuthenticationPrincipal Authentication authentication) {
+        // @TODO Это access токен, его надо сохранить в память frontend-a и с ним делать запросы на api
+        // если токен недействителен, то делаем запрос на refresh
+//        System.out.println(authentication.);
+//        return oidcUser;
+        return null;
     }
 
     @PostMapping("/logout/{userId}")

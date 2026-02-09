@@ -69,6 +69,33 @@ public class KeycloakUserService {
         }
     }
 
+    public Object refresh(String refreshToken) {
+        // Создаем headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        // Создаем form data
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("grant_type", "refresh_token");
+        formData.add("client_id", clientId);
+        formData.add("client_secret", clientSecret);
+        formData.add("refresh_token", refreshToken);
+
+        // Создаем HttpEntity
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(formData, headers);
+
+        try {
+            return restTemplate.exchange(
+                    "https://keycloak.khalimendik.ru/realms/NikKha03/protocol/openid-connect/token",
+                    HttpMethod.POST,
+                    requestEntity,
+                    String.class
+            ).getBody();
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+    }
+
     public String logout(String userId) {
         try {
             keycloak.realm(realm).users().get(userId).logout();
